@@ -94,3 +94,11 @@ function filterSet(s,fn){
     }
     return result;
 }
+/**
+ *
+ * @param arr
+ * @param names
+ */
+function namedArray(arr,names){
+
+}
