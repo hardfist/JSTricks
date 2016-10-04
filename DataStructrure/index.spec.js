@@ -31,5 +31,27 @@ describe('数据结构与算法测试',function(){
         expect(arr).to.satisfy(arr => {
             return arr.every(x => x >=1 && x<10 && x%1==0);
         })
+    });
+    it('#countFrequency',function(){
+        let arr = [1,2,2,3,3,3,4,4,4,4];
+        let dict = util.countFrequency(arr);
+        expect(dict).to.deep.equal({
+            1:1,
+            2:2,
+            3:3,
+            4:4
+        })
+    });
+    it('#countWord',function(){
+        return util.countWord('../resources/word.txt')
+            .then(dict =>{
+                expect(dict).to.deep.equal({
+                    1:1,
+                    2:2,
+                    3:3,
+                    4:4
+                })
+            })
+
     })
 });

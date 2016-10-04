@@ -1,3 +1,4 @@
+var fs = require('fs');
 /**
  * generate range in [lo,hi] with step
  * @param lo
@@ -105,19 +106,34 @@ function namedArray(arr,names){
 function randInt(lo,hi){
     return Math.floor(Math.random()*(hi-lo))+lo;
 }
-/**
- *
- * @param arr
- */
 function countFrequency(arr){
-
+    return arr.reduce((dict,x)=> (dict[x] = (dict[x] || 0)+1,dict),{})
 }
+
+function countWord(filePath){
+    function count(lines){
+        let words = lines.split(/\s+/);
+        return countFrequency(words);
+    }
+    return new Promise((resolve,reject)=>{
+        fs.readFile(filePath,function(err,data){
+            if(err){
+                return reject(err)
+            }else{
+                return resolve(data.toString());
+            }
+        })
+    }).then(count);
+}
+
 module.exports ={
-    range:range,
-    zip:zip,
-    arrays2dict:arrays2dict,
-    filterKey: filterKey,
-    filterValue:filterValue,
-    namedArray:namedArray,
-    randInt,randInt
+    range,
+    zip,
+    arrays2dict,
+    filterKey,
+    filterValue,
+    namedArray,
+    randInt,
+    countFrequency,
+    countWord
 };
