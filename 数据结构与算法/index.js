@@ -34,62 +34,47 @@ function zip(left,right,fn=(l,r) => [l,r]){
  * @param values
  * @returns {Map}
  * @example
- * // returns  Map(a=>1,b=>2,c=>3)
+ * // returns {a:1,b:2,c:3}
  * arrays2dict(['a','b','c'],[1,2,3]) =>
  */
 function arrays2dict(keys,values){
-    return new Map(zip(keys,values));
+    let result = Object.create(null);
+    for(let i=0;i<Math.min(keys.length,values.length);i++){
+        result[keys[i]] = values[i];
+    }
+    return result;
 }
 /**
- * filter by key
+ *
  * @param dict
  * @param fn
- * @returns {Map}
+ * @returns {Object}
  * @example
- * // return {b=>2}
- * filterValue({a=>1,b=>2},x => x=='b')
+ * // returns
+ * filterKey({a:1,b:2},x => x === 'a')
  */
 function filterKey(dict,fn){
-    let result = new Map();
-    for(let [key,value] of dict){
+    let result = Object.create(null);
+    for(let key of Object.keys(dict)){
+        let value = dict[key];
         if(fn(key)){
-            result.set(key,value)
+            result[key] = value;
         }
     }
     return result;
 }
 /**
- * filter by value
+ *
  * @param dict
  * @param fn
- * @returns {Map}
- * @example
- * // returns {b => 2}
- * filterValue({a=>1,b=>2},x => x==2)
+ * @returns {Object}
  */
 function filterValue(dict,fn){
-    let result = new Map();
-    for(let [key,value] of dict){
+    let result = Object.create(null);
+    for(let key of Object.keys(dict)){
+        let value = dict[key];
         if(fn(value)){
-            result.set(key,value);
-        }
-    }
-    return result;
-}
-/**
- * filter set
- * @param s
- * @param fn
- * @returns {Set}
- * @example
- * // returns {2}
- * filterSet({1,2,3},x => x%2 ==0)
- */
-function filterSet(s,fn){
-    let result = new Set();
-    for(let key of s){
-        if(fn(key)){
-            result.add(s);
+            result[key] = value;
         }
     }
     return result;
@@ -98,7 +83,41 @@ function filterSet(s,fn){
  *
  * @param arr
  * @param names
+ * @example
+ * // returns arr; arr[first] == 1 && arr[second] == 2 && arr[third] == 3
+ * namedArray([1,2,3],['first','second','third'])
  */
 function namedArray(arr,names){
+    for(let i=0;i<Math.min(arr.length,names.length);i++){
+        arr[names[i]] = arr[i];
+    }
+    return arr;
+}
+/**
+ * generate random integer in [lo,hi)
+ * @param lo
+ * @param hi
+ * @returns {*}
+ * @example
+ * //probably returns 3
+ * randInt(0,10)
+ */
+function randInt(lo,hi){
+    return Math.floor(Math.random()*(hi-lo))+lo;
+}
+/**
+ *
+ * @param arr
+ */
+function countFrequency(arr){
 
 }
+module.exports ={
+    range:range,
+    zip:zip,
+    arrays2dict:arrays2dict,
+    filterKey: filterKey,
+    filterValue:filterValue,
+    namedArray:namedArray,
+    randInt,randInt
+};
