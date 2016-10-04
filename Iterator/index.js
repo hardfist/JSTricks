@@ -41,6 +41,14 @@ class PrimeNumbers {
         }
     }
 }
+/**
+ * zip arrays into an array
+ * @param args
+ * @returns {Array}
+ * @example
+ * // returns  [[1,11,111],[2,22,222],[3,33,333]]
+ * zip([1,2,3],[11,22,33],[111,222,333])
+ */
 function zip(...args){
     let lens = args.map(x => x.length);
     let min_len = Math.min(...lens);
@@ -50,6 +58,14 @@ function zip(...args){
     }
     return result;
 }
+/**
+ * chain arrays into an array
+ * @param args
+ * @returns {*}
+ * @example
+ * // returns [1,2,3,11,22,33,111,222,333]
+ * zip([1,2,3],[11,22,33],[111,222,333])
+ */
 function chain(...args){
     return args.reduce((s,t) => [...s,...t],[]);
 }
