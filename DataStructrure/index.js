@@ -10,6 +10,9 @@ var fs = require('fs');
  * range(1,2,10)
  */
 function range(lo,hi,step=1){
+    if(arguments.length == 1){
+        return Array.from({length:lo},(_,i) => i);
+    }
     return Array.from({length:hi-lo},(_,i) => lo+i*step)
 }
 /**
@@ -42,6 +45,20 @@ function arrays2dict(keys,values){
     let result = Object.create(null);
     for(let i=0;i<Math.min(keys.length,values.length);i++){
         result[keys[i]] = values[i];
+    }
+    return result;
+}
+/**
+ * get [[key,value]] from dict
+ * @param dict
+ * @returns {Array}
+ */
+function dict2arrays(dict){
+    let keys = Object.keys(dict);
+    let result = [[],[]];
+    for(let key of keys){
+        result[0].push(key);
+        result[1].push(dict[key]);
     }
     return result;
 }
@@ -106,10 +123,19 @@ function namedArray(arr,names){
 function randInt(lo,hi){
     return Math.floor(Math.random()*(hi-lo))+lo;
 }
+/**
+ * calculate word frequency
+ * @param arr
+ * @returns {*}
+ */
 function countFrequency(arr){
     return arr.reduce((dict,x)=> (dict[x] = (dict[x] || 0)+1,dict),{})
 }
-
+/**
+ * calculate word frequency in file
+ * @param filePath
+ * @returns {Promise.<TResult>}
+ */
 function countWord(filePath){
     function count(lines){
         let words = lines.split(/\s+/);
@@ -125,15 +151,55 @@ function countWord(filePath){
         })
     }).then(count);
 }
-
+function sortDict(dict){
+    let keys = Object.keys(dict);
+    keys.sort((a,b) =>{
+        return dict[a] < dict[b] ? -1 :
+            dict[a] > dict[b] ? 1 :
+                0;
+    });
+    return keys;
+}
+/**
+ * set union
+ * @param a
+ * @param b
+ * @returns {Set}
+ */
+function union(a,b){
+    return new Set([...a,...b]);
+}
+/**
+ * set intersect
+ * @param a
+ * @param b
+ * @returns {Set}
+ */
+function intersect(a,b){
+    return new Set([...a].filter(x => b.has(x)));
+}
+/**
+ * set diff
+ * @param a
+ * @param b
+ * @returns {Set}
+ */
+function diff(a,b){
+    return new Set([...a].filter(x => !b.has(x)))
+}
 module.exports ={
     range,
     zip,
     arrays2dict,
+    dict2arrays,
     filterKey,
     filterValue,
     namedArray,
     randInt,
     countFrequency,
-    countWord
+    countWord,
+    sortDict,
+    union,
+    intersect,
+    diff
 };
