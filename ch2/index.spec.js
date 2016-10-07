@@ -1,4 +1,3 @@
-var chai = require('chai');
 var util = require('./index');
 var expect = require('chai').expect;
 describe('对象迭代与反迭代',function(){
