@@ -63,25 +63,38 @@ ListLexer.LBRACK = Symbol('LBRACK');
 ListLexer.RBRACK = Symbol('RBRACK');
 ListLexer.NAME = Symbol('NAME');
 ListLexer.EOF = Symbol('EOF');
-
+ListLexer.EQUALS = Symbol('EQUALS');
 class Parser{
-    constructor(tokens){
+    constructor(tokens,k=1){
         this.input = tokens;
-        this.consume()
+        this.lookhead = new Array(k);
+        this.p = 0;
+        this.k = k;
+        for(let i=0;i<k;i++){
+            this.consume();
+        }
+    }
+    LA(i){
+        return this.LT(i).type;
+    }
+    LT(i){
+        //console.log(this.lookhead);
+        return this.lookhead[(this.p+i-1)%this.k];
     }
     match(type){
-        if(this.token.type === type) this.consume();
+        if(this.LA(1)=== type) this.consume();
         else{
-           throw new TypeError(`expect ${String(type)} but get ${String(this.token.type)}`);
+           throw new TypeError(`expect ${String(type)} but get ${String(this.LA(1))}`);
         }
     }
     consume(){
-        this.token = this.input.shift();
+        this.lookhead[this.p] = this.input.shift();
+        this.p = (this.p+1)%this.k;
     }
 }
 class ListParser extends Parser{
     constructor(input){
-        super(input);
+        super(input,2);
     }
     list(){
         this.match(ListLexer.LBRACK);
@@ -90,18 +103,24 @@ class ListParser extends Parser{
     }
     elements(){
         this.element();
-        while(this.token.type === ListLexer.COMMA){
+        while(this.LA(1) === ListLexer.COMMA){
             this.match(ListLexer.COMMA);
             this.element()
         }
     }
+
     element(){
-        if(this.token.type === ListLexer.NAME) this.match(ListLexer.NAME);
-        else if(this.token.type === ListLexer.LBRACK) this.list();
-        else throw new TypeError(`expecting name or list: found ${this.token}`);
+        if(this.LA(1) == ListLexer.NAME && this.LA(2) == ListLexer.EQUALS){
+            this.match(ListLexer.NAME);
+            this.match(ListLexer.EQUALS);
+            this.match(ListLexer.NAME);
+        }
+        else if(this.LA(1) === ListLexer.NAME) this.match(ListLexer.NAME);
+        else if(this.LA(1) === ListLexer.LBRACK) this.list();
+        else throw new TypeError(`expecting name or list: found ${String(this.LA(1))}`);
     }
 }
-module.exports={
+util = module.exports={
     Lexer,
     ListLexer,
     Parser,

@@ -19,4 +19,5 @@ describe('Lexer:',function(){
         let fn = parser.list.bind(parser);
         expect(fn).to.throw();
     })
+
 });
