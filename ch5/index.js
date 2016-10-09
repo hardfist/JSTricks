@@ -19,16 +19,8 @@ class Lexer{
         if(this.c == x) this.consume();
         throw new TypeError(`expecting ${x} but found ${this.c}`);
     }
-    getTokens(){
-        let token = this.nextToken();
-        let tokens = [];
-        while(token != null){
-            tokens.push(token);
-            token = this.nextToken();
-        }
-        return tokens;
-    }
 }
+Lexer.EOF = Symbol('EOF');
 class ListLexer extends Lexer{
     nextToken(){
         while(this.c!=null){
@@ -55,14 +47,23 @@ class ListLexer extends Lexer{
                 }
             }
         }
-        return null;
+        return new Token(ListLexer.EOF,'<EOF>');
+    }
+    getTokens(){
+        let token = this.nextToken();
+        let tokens = [];
+        while(token.type != Lexer.EOF){
+            tokens.push(token);
+            token = this.nextToken();
+        }
+        tokens.push(token);
+        return tokens;
     }
 }
 ListLexer.COMMA = Symbol('COMMA');
 ListLexer.LBRACK = Symbol('LBRACK');
 ListLexer.RBRACK = Symbol('RBRACK');
 ListLexer.NAME = Symbol('NAME');
-ListLexer.EOF = Symbol('EOF');
 ListLexer.EQUALS = Symbol('EQUALS');
 class Parser{
     constructor(tokens,k=1){
@@ -119,6 +120,78 @@ class ListParser extends Parser{
         else if(this.LA(1) === ListLexer.LBRACK) this.list();
         else throw new TypeError(`expecting name or list: found ${String(this.LA(1))}`);
     }
+}
+class BacktrackParser extends Parser{
+    constructor(input,k){
+        super(input,k);
+        this.markers = [];
+    }
+    stat(){
+        if(this.speculate_stat_alt1()){
+            this.list();
+            this.match(Lexer.EOF);
+        }else if(this.speculate_stat_alt2()){
+            this.assign();
+            this.match(Lexer.EOF);
+        }else{
+            throw new TypeError(`expecting stat found ${String(this.LT(1))}`)
+        }
+    }
+    speculate_stat_alt1(){
+        let success = true;
+        this.mark();
+        try{
+            this.list();
+            this.match(Lexer.EOF);
+        }catch(err){
+            success = false
+        }
+        this.release();
+        return success;
+
+    }
+    speculate_stat_alt2(){
+        let success = true;
+        this.mark();
+        try{
+            this.assign();
+            this.match(Lexer.EOF);
+        }catch(err){
+            success = false;
+        }
+        this.release();
+        return true;
+    }
+    consume(){
+        this.p++;
+        if(p== this.lookhead.length && !this.isSpeculating()){
+            this.p = 0;
+        }
+        this.sync(1);
+    }
+    mark(){
+        this.markers.push(this.p);
+        return this.p;
+    }
+    release(){
+        let marker = this.markers.pop();
+        this.seek(marker);
+    }
+    seek(index){
+        this.p = index;
+    }
+    isSpeculating(){
+        return this.markers.length > 0;
+    }
+}
+class AST{
+    constructor(token){
+        this.token = token;
+        this.children = [];
+    }
+}
+class ExprNode extends AST{
+
 }
 util = module.exports={
     Lexer,

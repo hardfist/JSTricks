@@ -4,7 +4,7 @@ describe('Lexer:',function(){
     it('parse list',function(){
         let lexer = new util.ListLexer('[a,b]');
         let tokens = lexer.getTokens();
-        expect(tokens.length).to.be.eql(5);
+        expect(tokens.length).to.be.eql(6);
     });
     it('parser List',function(){
         let lexer = new util.ListLexer('[a,b]');
