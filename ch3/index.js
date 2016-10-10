@@ -6,6 +6,7 @@
  * @example
  */
 function mySplit(s,ds){
+    console.log('fuck');
     return ds.split('').reduce((res,d)=>{
         return res.reduce((s,t) =>{
             return s.concat(t.split(d));

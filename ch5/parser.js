@@ -1,58 +1,45 @@
-function recognize1(s){
-    const START = Symbol('START');
-    const A = Symbol('A');
-    const AA = Symbol('AA');
-    const B = Symbol('B');
-    const AAB = Symbol('AAB');
-    let state = START;
-    for(let i=0;i<s.length;i++){
-        switch (state){
-            case START:
-                switch (s[i]){
-                    case 'a': state = A;continue;
-                    case 'b': continue;
-                    default:return false;
-                }
-            case A:
-                switch (s[i]){
-                    case 'a': state = AA;continue;
-                    case 'b': state = START;continue;
-                    default: return false;
-                }
-            case AA:
-                switch (s[i]){
-                    case 'a':continue;
-                    case 'b':state = AAB;continue;
-                    default: return false;
-                }
-            case AAB:
-                switch (s[i]){
-                    case 'a': case 'b': continue;
-                    default: return false;
-                }
+const LITERA = Symbol('LITERA');
+const EXPON = Symbol('EXPON');
+const SIGN = Symbol('SIGN');
+const INT = Symbol('INT');
+function leftmost(str){
+    let stk = [];
+    stk.push(LITERA);
+    let i=0;
+    while(stk.length > 0 && i<str.length){
+        let top = stk.pop();
+        //nontermina
+        if(typeof  top == 'symbol'){
+            switch (top){
+                case LITERA:
+                    stk.push(...[SIGN,INT,'.',INT,EXPON].reverse());
+                    break;
+                case EXPON:
+                    if(str[i] == 'e'){
+                        stk.push(...['e',SIGN,INT].reverse());
+                    }
+                    break;
+                case SIGN:
+                    if(str[i] == '+'){
+                        stk.push('+');
+                    }
+                    else if(str[i] == '-'){
+                        stk.push('-')
+                    }
+                    break;
+                case INT:
+                    stk.push(str[i]);
+            }
+        }else{
+            if(str[i] != top){
+                throw new TypeError(`expected ${str[i]} but got ${top}`);
+            }else{
+                console.log('consume:',top);
+                i++;
+            }
         }
     }
-    return state === AAB;
+    return i == str.length;
 }
-function recognize2(s){
-    const [START,A,AA,AAB] = Array.from({length:4},(_,i) => i);
-    const transitions = [
-        [A,START],
-        [AA,START],
-        [AA,AAB],
-        [AAB,AAB]
-    ];
-    let state = START;
-    for(let i=0;i<s.length;i++){
-        let c;
-        switch (s[i]){
-            case 'a': c = 0;break;
-            case 'b': c = 1;break;
-            default : return false;
-        }
-        state = transitions[state][c]
-    }
-    return state == AAB;
-}
-console.log(recognize1('aab'));
-console.log(recognize2('aab'));
+let str = '-1.0e5';
+console.log(leftmost(str));
