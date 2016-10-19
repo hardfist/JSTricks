@@ -8,8 +8,7 @@ function quick_sort(a,lo,hi){
         }
     }
     [a[k],a[hi]] = [a[hi],a[k]]
-    quick_sort(a,lo,k-1)
-    quick_sort(a,k+1,hi);
+    
 }
 module.exports={
     quick_sort
