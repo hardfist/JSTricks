@@ -108,6 +108,15 @@ Maybe.prototype.flatten = function(c){
     }
     return maybeFlatten(c)(this)
 }
+Maybe.prototype.map = function(c){
+    return maybe(c)(this)
+}
+var Monad = function(){}
+Monad.prototype.flatMap = function(c){
+    return this.map(c).flatten();
+}
+Array.prototype.__proto__ = Monad.prototype
+Maybe.prototype.__proto__ = Monad.prototype
 var None = function (){}
 None.prototype = Object.create(Maybe.prototype)
 None.prototype.toString = function() { return "None"}
@@ -142,4 +151,12 @@ var arrOfUnit = function(c){
     }
 } 
 
-
+var xs = [1,2,3],ys = [4,5],zs =[6]
+var res = xs.flatMap(function(x){
+    return ys.flatMap(function(y){
+        return zs.flatMap(function(z){
+            return (x*y)+z
+        })
+    })
+})
+console.log(res)
