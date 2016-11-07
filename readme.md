@@ -21,5 +21,12 @@
  
  ch5.parser
 
- ch6.MVVM Framework(todo)
- ping www.baidu.com
+ ch6.MVVM Framework
+ 
+ ch7.函数式编程
+ 
+ ch8.日期处理
+
+ ch9.异步编程
+
+ ch10.jquery techiniques
