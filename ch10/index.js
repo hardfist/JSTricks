@@ -57,10 +57,34 @@ jquery.extend({
             jquery.cache[id][name] = data;
         }
         return name ? jquery.cache[id][name] : jquery.cache[id]
+    },
+    removeData:function(elem,name){
+        elem = elem == global ? windowData : elem;
+        var id = elem[expando]
+        if(name){
+            if(jquery.cache[id]){
+                delete jquery.cache[id][name]
+                name = ""
+                if(Object.keys(jquery.cache[id]).length == 0){
+                    jquery.removeData(elem)
+                }
+            }
+        }else{
+            try{
+                delete elem[expando]
+            }catch(e){
+                if(elem.removeAttribute){
+                    elem.removeAttribute(expando)
+                }
+            }
+            delete jquery.cache[id]
+        }
     }
 })
 var obj = {}
 $$.data(obj,'hello','world')
 $$.data(obj,'test','fuck')
 console.log($$.data(obj,'hello'))
+console.log($$.data(obj))
+$$.removeData(obj,'hello')
 console.log($$.data(obj))
