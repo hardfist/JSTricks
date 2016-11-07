@@ -81,10 +81,45 @@ jquery.extend({
         }
     }
 })
+jquery.extend({
+    makeArray(data){
+        if(Array.isArray(data)){
+            return [...data]
+        }
+        return [data]
+    },
+    queue:function(elem,type,data){
+        if(elem){
+            type = (type || 'fx') + 'queue'
+            var q = jquery.data(elem,type)
+            if(!q){
+                 q = jquery.data(elem,type,jquery.makeArray(data))
+            }else if(data){
+                q.push(data)
+            }
+        }
+        return q
+    },
+    dequeue:function(elem,type){
+        var queue = jquery.queue(elem,type)
+        fn = queue.shift()
+        if(!type || type ==='fx'){
+            fn = queue[0]
+        }
+        if(fn !== undefined){
+            fn.call(elem)
+        }
+    }
+})
 var obj = {}
-$$.data(obj,'hello','world')
-$$.data(obj,'test','fuck')
-console.log($$.data(obj,'hello'))
+function cb1(){
+    console.log('test1')
+}
+function cb2(){
+    console.log('test2')
+}
+$$.queue(obj,'testq',cb1);
+$$.queue(obj,'testq',cb2);
 console.log($$.data(obj))
-$$.removeData(obj,'hello')
-console.log($$.data(obj))
+console.log($$.queue(obj,'testq'))
+$$.dequeue(obj,'testq')
