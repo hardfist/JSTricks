@@ -174,11 +174,52 @@ function Deferred() {
 function defer() {
     return new Deferred()
 }
+function reject(){
+
+}
+function all(promises){
+    var results = [];
+    var counter = 0;
+    var d = defer();
+    for(let i=0,length=promises.length;i < length;i++){
+        counter++;
+        let promise = promises[i];
+        when(promise).then(function(value){
+            results[i] = value;
+            counter--;
+            if(!counter){
+                d.resolve(results);
+            }
+        },function(rejection){
+            d.reject(rejection);
+        })
+    }
+    if(!counter){
+        d.resolve(results);
+    }
+    return d.promise;
+}
+    
+var resolve = when;
+function when(value,callback,errback,progressBack){
+    var d = defer();
+    d.resolve(value);
+    return d.promise.then(callback,errback,progressBack)
+}
 var Promise2 = function () {
     this.$$state = {}
 }
 function delay(fn) {
     fn();
+}
+function makePromise(value,resolved){
+    var d = new Deferred();
+    if(resolved){
+        d.resolve(value);
+    }else{
+        d.reject(value);
+    }
+    return d.promise;
 }
 function processQueue(state) {
     var pending = state.pending;
@@ -194,11 +235,11 @@ function processQueue(state) {
             } else if (state.status === 1) {
                 deferred.resolve(state.value)
             } else {
-                console.log('err:',e)
+                //console.log('err:',e)
                 deferred.reject(state.value)
             }
         } catch (e) {
-            console.log('err:',e)
+            //console.log('err:',e)
             deferred.reject(e)
         }
     }
@@ -209,21 +250,32 @@ function scheduleProcessQueue(state) {
     })
 }
 
-Promise2.prototype.then = function (onFullfilled, onRejected) {
+function handleFinallyCallback(callback,value,resolved){
+    var callbackValue = callback();
+    if(callbackValue && callbackValue.then){
+        return callbackValue.then(function(){
+            return makePromise(value,resolved);
+        })
+    }else{
+        return makePromise(value,resolved);
+    }
+}
+
+Promise2.prototype.then = function (onFullfilled, onRejected,onProgress) {
     var result = new Deferred()
     this.$$state.pending = this.$$state.pending || [];
-    this.$$state.pending.push([result, onFullfilled, onRejected])
+    this.$$state.pending.push([result, onFullfilled, onRejected,onProgress])
     if (this.$$state.status > 0) {
         scheduleProcessQueue(this.$$state)
     }
     return result.promise;
 }
-Promise2.prototype.finally = function (callback) {
-    return this.then(function () {
-        callback()
-    }, function () {
-        callback()
-    })
+Promise2.prototype.finally = function (callback,progressBack) {
+    return this.then(function (value) {
+        return handleFinallyCallback(callback,value,true);
+    }, function (rejection) {
+        return handleFinallyCallback(callback,rejection,false);
+    },progressBack)
 }
 Deferred.prototype.resolve = function (value) {
     var self = this;
@@ -233,7 +285,8 @@ Deferred.prototype.resolve = function (value) {
     if (value && jquery.isFunction(value.then)) {
         value.then(
             self.resolve.bind(self),
-            self.reject.bind(self)
+            self.reject.bind(self),
+            self.notify.bind(self)
         )
     } else {
         self.promise.$$state.status = 1;
@@ -249,43 +302,33 @@ Deferred.prototype.reject = function (reason) {
     this.promise.$$state.status = 2;
     scheduleProcessQueue(this.promise.$$state)
 }
+Deferred.prototype.notify = function(progress){
+    var pending = this.promise.$$state.pending;
+    if(pending && pending.length && !this.promise.$$state.status){
+        delay(function(){
+            for(let handlers of pending){
+                var deferred = handlers[0]
+                var progressBack = handlers[3];
+                try{
+                if(jquery.isFunction(progressBack)){
+                    progressBack(progress);
+                }
+                deferred.notify(jquery.isFunction(progressBack) ?
+                                                    progressBack(progress) :
+                                                    progress)
+                }catch(e){
+                    console.log(e);
+                }
+            }
+        })
+    }
+}
+
 
 var d = defer();
-var d2 = defer();
-d.promise.then(function(){
-    console.log('d resolved')
-})
-d.resolve(42)
-d2.promise.then(function(){
-    console.log('d2 resolved')
-})
-d2.resolve(d.promise)
-
-/*
-var d2 = defer();
-d2.resolve('d2')
-d.resolve(d2.promise)
-d2.promise.then(function(){
-    console.log('d2 resolved')
-})
-d.promise.then(function(){
-    console.log('d resolved')
-})
-*/
-
-/*
-var d = defer();
-var d2 = defer();
-
-d.promise.then(function () {
-    console.log('d resolved')
-})
-d2.promise.then(function () {
-    console.log('d2 resolved')
-})
-d2.resolve(42)
-d.resolve(d2.promise)
-d2.promise.then(function(){
-    console.log('d2 resolved again')
-})
-*/
+function fn(){
+    console.log('loading')
+}
+d.promise.then(null,null,fn);
+d.resolve('ss')
+d.notify('working')
