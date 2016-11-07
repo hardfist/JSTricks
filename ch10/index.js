@@ -46,7 +46,7 @@ jquery.fn.extend({
 // utility function
 
 jquery.extend({
-    isFunction(fn){
+    isFunction(fn) {
         return typeof fn === 'function'
     }
 })
@@ -119,7 +119,7 @@ jquery.extend({
             fn.call(elem)
         }
     },
-    Callbacks:Callbacks,
+    Callbacks: Callbacks,
     $Callbacks: Callbacks,
     $Deferred: Deferred,
     each: function (obj, callback) {
@@ -168,75 +168,124 @@ function Callbacks(options) {
     }
     return self;
 }
-function Deferred(){
+function Deferred() {
     this.promise = new Promise2;
 }
-function defer(){
+function defer() {
     return new Deferred()
 }
-var Promise2 = function(){
+var Promise2 = function () {
     this.$$state = {}
 }
-function delay(fn){
-    new Promise((resolve,reject)=>{
-        fn();
-    })
+function delay(fn) {
+    fn();
 }
-function processQueue(state){
+function processQueue(state) {
     var pending = state.pending;
     delete state.pending;
-    for(let arr of pending){
+    if (!pending) return;
+    for (let arr of pending) {
+        var deferred = arr[0]
         var fn = arr[state.status];
-        if(jquery.isFunction(fn)){
-            fn(state.value)
+        try {
+            if (jquery.isFunction(fn)) {
+                var value = fn(state.value)
+                deferred.resolve(value);
+            } else if (state.status === 1) {
+                deferred.resolve(state.value)
+            } else {
+                console.log('err:',e)
+                deferred.reject(state.value)
+            }
+        } catch (e) {
+            console.log('err:',e)
+            deferred.reject(e)
         }
     }
 }
-function scheduleProcessQueue(state){
-    delay(function(){
+function scheduleProcessQueue(state) {
+    delay(function () {
         processQueue(state);
     })
 }
 
-Promise2.prototype.then = function(onFullfilled,onRejected){
+Promise2.prototype.then = function (onFullfilled, onRejected) {
+    var result = new Deferred()
     this.$$state.pending = this.$$state.pending || [];
-    this.$$state.pending.push([null,onFullfilled,onRejected])
-    if(this.$$state.status > 0){
+    this.$$state.pending.push([result, onFullfilled, onRejected])
+    if (this.$$state.status > 0) {
         scheduleProcessQueue(this.$$state)
     }
+    return result.promise;
 }
-Promise2.prototype.finally = function(callback){
-    return this.then(function(){
+Promise2.prototype.finally = function (callback) {
+    return this.then(function () {
         callback()
-    },function(){
+    }, function () {
         callback()
     })
 }
-Deferred.prototype.resolve = function(value){
+Deferred.prototype.resolve = function (value) {
     var self = this;
-    if(self.promise.$$state.status){
+    if (self.promise.$$state.status) {
         return;
     }
-    self.promise.$$state.status = 1;
-    self.promise.$$state.value = value;
-    scheduleProcessQueue(self.promise.$$state)
-    
+    if (value && jquery.isFunction(value.then)) {
+        value.then(
+            self.resolve.bind(self),
+            self.reject.bind(self)
+        )
+    } else {
+        self.promise.$$state.status = 1;
+        self.promise.$$state.value = value;
+        scheduleProcessQueue(self.promise.$$state)
+    }
 }
-Deferred.prototype.reject = function(reason){
-    if(this.promise.$$state.status){
+Deferred.prototype.reject = function (reason) {
+    if (this.promise.$$state.status) {
         return;
     }
     this.promise.$$state.value = reason;
     this.promise.$$state.status = 2;
     scheduleProcessQueue(this.promise.$$state)
 }
+
 var d = defer();
-var p = d.promise;
-p.then(function(value){
-    console.log('value:',value)
-})
-p.then(function(value){
-    console.log('value2:',value)
+var d2 = defer();
+d.promise.then(function(){
+    console.log('d resolved')
 })
 d.resolve(42)
-d.resolve(43)
+d2.promise.then(function(){
+    console.log('d2 resolved')
+})
+d2.resolve(d.promise)
+
+/*
+var d2 = defer();
+d2.resolve('d2')
+d.resolve(d2.promise)
+d2.promise.then(function(){
+    console.log('d2 resolved')
+})
+d.promise.then(function(){
+    console.log('d resolved')
+})
+*/
+
+/*
+var d = defer();
+var d2 = defer();
+
+d.promise.then(function () {
+    console.log('d resolved')
+})
+d2.promise.then(function () {
+    console.log('d2 resolved')
+})
+d2.resolve(42)
+d.resolve(d2.promise)
+d2.promise.then(function(){
+    console.log('d2 resolved again')
+})
+*/
